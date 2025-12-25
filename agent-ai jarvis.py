@@ -31,7 +31,8 @@ NOISE_FLOOR = 100  # Filtro de ruído para volumes muito baixos
 RECORD_TIME_AFTER_DETECTION = 2.0  # Tempo de gravação após a detecção (em segundos)
 DETECTION_TIME = 0.2  # Tempo necessário para considerar que o som é contínuo (em segundos)
 
-client = OpenAI()
+load_dotenv()  # carrega as variáveis do .env
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 task_manager = TaskManager()
 
 class ChatbotApp:
