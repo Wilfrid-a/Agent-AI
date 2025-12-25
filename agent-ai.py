@@ -7,6 +7,7 @@ import webbrowser
 import logging
 import sounddevice as sd
 import numpy as np
+import urllib.parse
 
 # ===============================
 # CONFIGURAÇÃO
@@ -57,8 +58,8 @@ def falar(texto):
 def ouvir():
     r = sr.Recognizer()
 
-    fs = 16000          # taxa de amostragem
-    duracao = 5         # segundos
+    fs = 16000
+    duracao = 5
     canais = 1
 
     print("🎤 Ouvindo...")
@@ -75,8 +76,7 @@ def ouvir():
         logging.error(f"Erro ao acessar o microfone: {e}")
         return ""
 
-    audio_bytes = audio_np.tobytes()
-    audio = sr.AudioData(audio_bytes, fs, 2)
+    audio = sr.AudioData(audio_np.tobytes(), fs, 2)
 
     try:
         texto = r.recognize_google(audio, language="pt-BR")
@@ -109,18 +109,45 @@ def perguntar_chatgpt(pergunta):
         logging.error(e)
         return "Desculpe, estou com problemas para me conectar no momento."
 
+# ===============================
+# GOOGLE SEARCH
+# ===============================
+def pesquisar_google(termo):
+    if not termo.strip():
+        falar("O que você quer pesquisar no Google?")
+        return True
+
+    termo_url = urllib.parse.quote(termo)
+    url = f"https://www.google.com/search?q={termo_url}"
+
+    falar(f"Pesquisando no Google por {termo}.")
+    webbrowser.open(url)
+    return True
+
 def mostrar_ajuda():
     falar(
-        "Eu sou o Klér, seu assistente virtual. "
-        "Posso informar hora e data, abrir sites como Google e YouTube "
-        "e responder perguntas sobre diversos assuntos."
+        "Eu posso informar hora e data, abrir sites, pesquisar no Google "
+        "e responder perguntas usando inteligência artificial."
     )
 
+# ===============================
+# RESPOSTAS
+# ===============================
 def responder(texto):
     if not texto:
         return True
 
     t = texto.lower()
+
+    # Pesquisa no Google
+    if any(cmd in t for cmd in ["pesquisar no google", "buscar no google", "procurar no google"]):
+        termo = (
+            t.replace("pesquisar no google", "")
+             .replace("buscar no google", "")
+             .replace("procurar no google", "")
+             .strip()
+        )
+        return pesquisar_google(termo)
 
     comandos = {
         "tchau|encerrar|sair|até mais|adeus":
@@ -159,6 +186,9 @@ def responder(texto):
     falar(resposta)
     return True
 
+# ===============================
+# MAIN
+# ===============================
 def main():
     falar("Olá! Eu sou o Klér, seu assistente pessoal. Como posso te ajudar hoje?")
 
